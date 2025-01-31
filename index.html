@@ -22,16 +22,37 @@
                 width: 80%;
             }
         }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 50%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <button id="startGameBtn">Start Game</button>
+    <div id="lobby">
+        <h2>Game Lobby</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Players in Lobby</th>
+                </tr>
+            </thead>
+            <tbody id="playerList"></tbody>
+        </table>
+        <br>
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <button id="joinGameBtn">Join Game</button>
+    </div>
 
     <div id="playersSection">
         <h2>Players</h2>
-        <input type="text" id="playerName" placeholder="Enter your name">
-        <button id="joinGameBtn">Join Game</button>
+        <button id="startGameBtn">Start Game</button>
     </div>
 
     <div id="supervisorSection">
