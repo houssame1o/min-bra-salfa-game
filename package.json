@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "name": "min-bra-salfa-game-main",
+  "version": "1.0.0",
+  "main": "game.js",
+  "dependencies": {
+    "esbuild": "^0.24.2",
+    "nanoid": "^3.3.8",
+    "picocolors": "^1.1.1",
+    "postcss": "^8.5.1",
+    "rollup": "^4.32.1",
+    "source-map-js": "^1.2.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "vite": "^4.5.9"
+  }
+}
