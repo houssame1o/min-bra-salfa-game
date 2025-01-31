@@ -13,79 +13,60 @@
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+let gameRoom = "room1";  // Static room for now
 let players = [];
-let supervisor = null;
-let gameRoom = "room1";  // Static room (Later, make it dynamic)
-let scores = {};
-let timer;
 
-// Real-time updates
-db.collection("games").doc(gameRoom).onSnapshot((doc) => {
-    if (doc.exists) {
-        const data = doc.data();
-        players = data.players;
-        supervisor = data.supervisor;
-        updateUI();
-    }
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
+    document.getElementById('startGameBtn').addEventListener('click', startGame);
+    document.getElementById('startConversationBtn').addEventListener('click', startConversation);
+    document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
+
+    // Listen for real-time updates on player list
+    db.collection("games").doc(gameRoom).onSnapshot((doc) => {
+        if (doc.exists) {
+            players = doc.data().players;
+            updatePlayerList();
+        }
+    });
 });
 
-function updateGameData() {
-    db.collection("games").doc(gameRoom).set({
-        players: players,
-        supervisor: supervisor
+// Function to allow a player to join the game
+function joinGame() {
+    const playerName = document.getElementById('playerName').value.trim();
+    if (!playerName) {
+        alert("Please enter your name!");
+        return;
+    }
+
+    if (players.includes(playerName)) {
+        alert("This name is already taken. Choose another one.");
+        return;
+    }
+
+    players.push(playerName);
+
+    // Update Firestore with new player
+    db.collection("games").doc(gameRoom).set({ players });
+
+    document.getElementById('playerName').value = '';
+}
+
+// Function to update the player table in real-time
+function updatePlayerList() {
+    const playerList = document.getElementById('playerList');
+    playerList.innerHTML = "";  // Clear old list
+
+    players.forEach((player) => {
+        let row = document.createElement('tr');
+        row.innerHTML = `<td>${player}</td>`;
+        playerList.appendChild(row);
     });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("JavaScript Loaded!");  // Debugging Log
-
-    const startGameBtn = document.getElementById('startGameBtn');
-    if (startGameBtn) {
-        startGameBtn.addEventListener('click', startGame);
-    } else {
-        console.error("Start Game button not found!");
-    }
-
-    const joinGameBtn = document.getElementById('joinGameBtn');
-    if (joinGameBtn) {
-        joinGameBtn.addEventListener('click', joinGame);
-    } else {
-        console.error("Join Game button not found!");
-    }
-
-    const startConversationBtn = document.getElementById('startConversationBtn');
-    if (startConversationBtn) {
-        startConversationBtn.addEventListener('click', startConversation);
-    } else {
-        console.error("Start Conversation button not found!");
-    }
-
-    const selectOutsideBtn = document.getElementById('selectOutsideBtn');
-    if (selectOutsideBtn) {
-        selectOutsideBtn.addEventListener('click', selectOutsidePlayer);
-    } else {
-        console.error("Select Outside button not found!");
-    }
-});
-
 function startGame() {
-    console.log("Start Game Clicked!");  // Debugging Log
-    document.getElementById('startGameBtn').style.display = 'none';
+    console.log("Start Game Clicked!");
     document.getElementById('playersSection').style.display = 'block';
-}
-
-function joinGame() {
-    const playerName = document.getElementById('playerName').value.trim();
-    if (playerName) {
-        players.push(playerName);
-        document.getElementById('playerName').value = '';
-        if (players.length === 4) {
-            supervisor = players[0];
-        }
-        updateGameData();
-    } else {
-        alert("Enter a name!");
-    }
 }
 
 function startConversation() {
@@ -93,15 +74,14 @@ function startConversation() {
     const subject = document.getElementById('subject').value.trim();
 
     if (category && subject) {
-        alert(`Supervisor ${supervisor} chose: ${category} - ${subject}`);
+        alert(`Supervisor chose: ${category} - ${subject}`);
         document.getElementById('supervisorSection').style.display = 'none';
         document.getElementById('gameArea').style.display = 'block';
 
-        // Start countdown timer (3 minutes)
         let timeLeft = 180;
         document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
 
-        timer = setInterval(() => {
+        let timer = setInterval(() => {
             timeLeft--;
             document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
             if (timeLeft <= 0) {
@@ -136,26 +116,9 @@ function submitGuess() {
 
     const correctSubject = document.getElementById('subject').value.trim().toLowerCase();
     if (guess.toLowerCase() === correctSubject) {
-        scores[playerName] = (scores[playerName] || 0) + 1;
-        alert(`${playerName} guessed correctly! +1 point`);
+        alert(`${playerName} guessed correctly!`);
     } else {
         alert("Wrong guess!");
     }
-    updateScores();
 }
-
-function updateScores() {
-    let scoreBoard = document.getElementById('scoreBoard');
-    scoreBoard.innerHTML = "<h3>Scoreboard</h3>";
-    for (let player in scores) {
-        scoreBoard.innerHTML += `<p>${player}: ${scores[player]} points</p>`;
-    }
-}
-
-// Update UI when Firestore data changes
-function updateUI() {
-    document.getElementById('supervisorSection').style.display = players.length === 4 ? 'block' : 'none';
-    document.getElementById('gameArea').style.display = supervisor ? 'block' : 'none';
-}
-
 
