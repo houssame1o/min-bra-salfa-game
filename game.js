@@ -1,56 +1,57 @@
+// Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCTi7KH1TN-mc0mxY2IwQPq0R1bklEfMHU",
+    authDomain: "minbrasalfa.firebaseapp.com",
+    projectId: "minbrasalfa",
+    storageBucket: "minbrasalfa.firebasestorage.app",
+    messagingSenderId: "303059221332",
+    appId: "1:303059221332:web:4b734d5481841cbd6ee6c1",
+    measurementId: "G-7R3JQD50RT"
+  };
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 let players = [];
 let supervisor = null;
+let gameRoom = "room1";  // Static room (Later, make it dynamic)
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById('startGameBtn').addEventListener('click', startGame);
-    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
-    document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
-    document.getElementById('startConversationBtn').addEventListener('click', startConversation);
+// Watch for real-time updates
+db.collection("games").doc(gameRoom).onSnapshot((doc) => {
+    if (doc.exists) {
+        const data = doc.data();
+        players = data.players;
+        supervisor = data.supervisor;
+        updateUI();
+    }
 });
 
-function startGame() {
-    document.getElementById('startGameBtn').style.display = 'none';
-    document.getElementById('playersSection').style.display = 'block';
+// Function to update Firestore
+function updateGameData() {
+    db.collection("games").doc(gameRoom).set({
+        players: players,
+        supervisor: supervisor
+    });
 }
 
+// Player joins game
 function joinGame() {
     const playerName = document.getElementById('playerName').value;
     if (playerName) {
         players.push(playerName);
         document.getElementById('playerName').value = '';
-        alert(`${playerName} joined the game!`);
-        
         if (players.length === 4) {
-            document.getElementById('playersSection').style.display = 'none';
-            document.getElementById('supervisorSection').style.display = 'block';
-            supervisor = players[0]; // The first player to join is the supervisor
-            alert(`${supervisor} is the supervisor!`);
+            supervisor = players[0];
         }
+        updateGameData();
     } else {
-        alert("Please enter a name");
+        alert("Enter a name!");
     }
 }
 
-function startConversation() {
-    const category = document.getElementById('category').value.trim();
-    const subject = document.getElementById('subject').value.trim();
-
-    if (category && subject) {
-        alert(`Supervisor ${supervisor} chose the category: ${category} and subject: ${subject}`);
-        document.getElementById('supervisorSection').style.display = 'none';
-        document.getElementById('gameArea').style.display = 'block';
-        // Proceed to the next stage of the game (randomly select outside player)
-    } else {
-        alert("Please enter both a category and a subject.");
-    }
-}
-
-function selectOutsidePlayer() {
-    if (players.length < 4) {
-        alert("Need at least four players to start");
-        return;
-    }
-    const randomIndex = Math.floor(Math.random() * players.length);
-    const outsidePlayer = players[randomIndex];
-    document.getElementById('selectedPlayer').innerHTML = `<h3>The outside player is: ${outsidePlayer}</h3>`;
+// Update UI (after Firestore update)
+function updateUI() {
+    document.getElementById('supervisorSection').style.display = players.length === 4 ? 'block' : 'none';
+    document.getElementById('gameArea').style.display = supervisor ? 'block' : 'none';
 }
