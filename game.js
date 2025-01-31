@@ -16,6 +16,7 @@ const db = firebase.firestore();
 let players = [];
 let supervisor = null;
 let gameRoom = "room1";  // Static room (Later, make it dynamic)
+let timer;
 
 // Watch for real-time updates
 db.collection("games").doc(gameRoom).onSnapshot((doc) => {
@@ -55,3 +56,30 @@ function updateUI() {
     document.getElementById('supervisorSection').style.display = players.length === 4 ? 'block' : 'none';
     document.getElementById('gameArea').style.display = supervisor ? 'block' : 'none';
 }
+
+function startConversation() {
+    const category = document.getElementById('category').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+
+    if (category && subject) {
+        alert(`Supervisor ${supervisor} chose: ${category} - ${subject}`);
+        document.getElementById('supervisorSection').style.display = 'none';
+        document.getElementById('gameArea').style.display = 'block';
+
+        // Start countdown timer (3 minutes)
+        let timeLeft = 180;
+        document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
+
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                alert("Time's up!");
+            }
+        }, 1000);
+    } else {
+        alert("Enter both category and subject.");
+    }
+}
+
