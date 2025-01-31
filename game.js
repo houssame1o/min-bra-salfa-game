@@ -16,9 +16,9 @@ const db = firebase.firestore();
 let players = [];
 let supervisor = null;
 let gameRoom = "room1";  // Static room (Later, make it dynamic)
-let timer;
+let scores = {};
 
-// Watch for real-time updates
+// Real-time updates
 db.collection("games").doc(gameRoom).onSnapshot((doc) => {
     if (doc.exists) {
         const data = doc.data();
@@ -28,7 +28,6 @@ db.collection("games").doc(gameRoom).onSnapshot((doc) => {
     }
 });
 
-// Function to update Firestore
 function updateGameData() {
     db.collection("games").doc(gameRoom).set({
         players: players,
@@ -36,9 +35,20 @@ function updateGameData() {
     });
 }
 
-// Player joins game
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('startGameBtn').addEventListener('click', startGame);
+    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
+    document.getElementById('startConversationBtn').addEventListener('click', startConversation);
+    document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
+});
+
+function startGame() {
+    document.getElementById('startGameBtn').style.display = 'none';
+    document.getElementById('playersSection').style.display = 'block';
+}
+
 function joinGame() {
-    const playerName = document.getElementById('playerName').value;
+    const playerName = document.getElementById('playerName').value.trim();
     if (playerName) {
         players.push(playerName);
         document.getElementById('playerName').value = '';
@@ -49,12 +59,6 @@ function joinGame() {
     } else {
         alert("Enter a name!");
     }
-}
-
-// Update UI (after Firestore update)
-function updateUI() {
-    document.getElementById('supervisorSection').style.display = players.length === 4 ? 'block' : 'none';
-    document.getElementById('gameArea').style.display = supervisor ? 'block' : 'none';
 }
 
 function startConversation() {
@@ -70,7 +74,7 @@ function startConversation() {
         let timeLeft = 180;
         document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
 
-        timer = setInterval(() => {
+        let timer = setInterval(() => {
             timeLeft--;
             document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
             if (timeLeft <= 0) {
@@ -82,4 +86,49 @@ function startConversation() {
         alert("Enter both category and subject.");
     }
 }
+
+function selectOutsidePlayer() {
+    if (players.length < 4) {
+        alert("Need at least four players to start");
+        return;
+    }
+    const randomIndex = Math.floor(Math.random() * players.length);
+    const outsidePlayer = players[randomIndex];
+    document.getElementById('selectedPlayer').innerHTML = `<h3>The outside player is: ${outsidePlayer}</h3>`;
+}
+
+// Score System
+function submitGuess() {
+    const playerName = prompt("Enter your name:");
+    const guess = document.getElementById('guessInput').value.trim();
+
+    if (!playerName || !guess) {
+        alert("Enter both name and guess.");
+        return;
+    }
+
+    const correctSubject = document.getElementById('subject').value.trim().toLowerCase();
+    if (guess.toLowerCase() === correctSubject) {
+        scores[playerName] = (scores[playerName] || 0) + 1;
+        alert(`${playerName} guessed correctly! +1 point`);
+    } else {
+        alert("Wrong guess!");
+    }
+    updateScores();
+}
+
+function updateScores() {
+    let scoreBoard = document.getElementById('scoreBoard');
+    scoreBoard.innerHTML = "<h3>Scoreboard</h3>";
+    for (let player in scores) {
+        scoreBoard.innerHTML += `<p>${player}: ${scores[player]} points</p>`;
+    }
+}
+
+// Update UI when Firestore data changes
+function updateUI() {
+    document.getElementById('supervisorSection').style.display = players.length === 4 ? 'block' : 'none';
+    document.getElementById('gameArea').style.display = supervisor ? 'block' : 'none';
+}
+
 
