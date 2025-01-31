@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -124,3 +125,91 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Bra Salfa Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        input, button {
+            font-size: 20px;
+            padding: 10px;
+            margin: 5px;
+        }
+        #gameArea, #supervisorSection, #playersSection {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            input, button {
+                width: 80%;
+            }
+        }
+        table {
+            margin: 0 auto;
+            border-collapse: collapse;
+            width: 50%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lobby">
+        <h2>Game Lobby</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Players in Lobby</th>
+                </tr>
+            </thead>
+            <tbody id="playerList"></tbody>
+        </table>
+        <br>
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <button id="joinGameBtn">Join Game</button>
+    </div>
+
+    <div id="playersSection">
+        <h2>Players</h2>
+        <button id="startGameBtn">Start Game</button>
+    </div>
+
+    <div id="supervisorSection">
+        <h2>Choose Category and Subject</h2>
+        <label for="category">Category (e.g., sports, movies, etc.):</label>
+        <input type="text" id="category" placeholder="Enter category here">
+
+        <label for="subject">Subject (السالفة):</label>
+        <input type="text" id="subject" placeholder="Enter subject here">
+
+        <button id="startConversationBtn">Start Conversation</button>
+    </div>
+
+    <div id="gameArea">
+        <h2>Game in Progress...</h2>
+        <div id="timer" style="font-size: 24px; font-weight: bold;"></div>
+        <button id="selectOutsideBtn">Select Outside Player</button>
+        <div id="selectedPlayer"></div>
+        <h3>Guess the Subject:</h3>
+        <input type="text" id="guessInput" placeholder="Enter your guess">
+        <button onclick="submitGuess()">Submit Guess</button>
+        <div id="scoreBoard"></div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js"></script>
+    <script src="game.js"></script>
+
+</body>
+</html>
+>>>>>>> 1d4075d6028708b5779426e88557e470f3980da8
