@@ -17,6 +17,7 @@ let players = [];
 let supervisor = null;
 let gameRoom = "room1";  // Static room (Later, make it dynamic)
 let scores = {};
+let timer;
 
 // Real-time updates
 db.collection("games").doc(gameRoom).onSnapshot((doc) => {
@@ -36,13 +37,39 @@ function updateGameData() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById('startGameBtn').addEventListener('click', startGame);
-    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
-    document.getElementById('startConversationBtn').addEventListener('click', startConversation);
-    document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
+    console.log("JavaScript Loaded!");  // Debugging Log
+
+    const startGameBtn = document.getElementById('startGameBtn');
+    if (startGameBtn) {
+        startGameBtn.addEventListener('click', startGame);
+    } else {
+        console.error("Start Game button not found!");
+    }
+
+    const joinGameBtn = document.getElementById('joinGameBtn');
+    if (joinGameBtn) {
+        joinGameBtn.addEventListener('click', joinGame);
+    } else {
+        console.error("Join Game button not found!");
+    }
+
+    const startConversationBtn = document.getElementById('startConversationBtn');
+    if (startConversationBtn) {
+        startConversationBtn.addEventListener('click', startConversation);
+    } else {
+        console.error("Start Conversation button not found!");
+    }
+
+    const selectOutsideBtn = document.getElementById('selectOutsideBtn');
+    if (selectOutsideBtn) {
+        selectOutsideBtn.addEventListener('click', selectOutsidePlayer);
+    } else {
+        console.error("Select Outside button not found!");
+    }
 });
 
 function startGame() {
+    console.log("Start Game Clicked!");  // Debugging Log
     document.getElementById('startGameBtn').style.display = 'none';
     document.getElementById('playersSection').style.display = 'block';
 }
@@ -74,7 +101,7 @@ function startConversation() {
         let timeLeft = 180;
         document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
 
-        let timer = setInterval(() => {
+        timer = setInterval(() => {
             timeLeft--;
             document.getElementById('timer').innerHTML = `Time left: ${timeLeft}s`;
             if (timeLeft <= 0) {
