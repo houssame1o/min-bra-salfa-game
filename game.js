@@ -1,6 +1,6 @@
 // Firebase Configuration
   const firebaseConfig = {
-    apiKey: apiKey: process.env.FIREBASE_API_KEY || "your-fallback-key",,
+    apiKey: process.env.FIREBASE_API_KEY,
     authDomain: "minbrasalfa.firebaseapp.com",
     projectId: "minbrasalfa",
     storageBucket: "minbrasalfa.firebasestorage.app",
