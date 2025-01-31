@@ -1,11 +1,39 @@
-<div id="supervisorSection" style="display:none;">
-    <h2>Choose Category and Subject</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Min Bra Salfa Game</title>
+</head>
+<body>
 
-    <label for="category">Category (e.g., sports, movies, etc.):</label>
-    <input type="text" id="category" placeholder="Enter category here">
+    <button id="startGameBtn">Start Game</button>
 
-    <label for="subject">Subject (السالفة):</label>
-    <input type="text" id="subject" placeholder="Enter subject here">
+    <div id="playersSection" style="display:none;">
+        <h2>Players</h2>
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <button id="joinGameBtn">Join Game</button>
+    </div>
 
-    <button id="startConversationBtn">Start Conversation</button>
-</div>
+    <div id="supervisorSection" style="display:none;">
+        <h2>Choose Category and Subject</h2>
+
+        <label for="category">Category (e.g., sports, movies, etc.):</label>
+        <input type="text" id="category" placeholder="Enter category here">
+
+        <label for="subject">Subject (السالفة):</label>
+        <input type="text" id="subject" placeholder="Enter subject here">
+
+        <button id="startConversationBtn">Start Conversation</button>
+    </div>
+
+    <div id="gameArea" style="display:none;">
+        <h2>Game in Progress...</h2>
+        <button id="selectOutsideBtn">Select Outside Player</button>
+        <div id="selectedPlayer"></div>
+    </div>
+
+    <script src="game.js"></script>
+
+</body>
+</html>
