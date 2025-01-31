@@ -1,10 +1,12 @@
 let players = [];
 let supervisor = null;
 
-document.getElementById('startGameBtn').addEventListener('click', startGame);
-document.getElementById('joinGameBtn').addEventListener('click', joinGame);
-document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
-document.getElementById('startConversationBtn').addEventListener('click', startConversation);
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('startGameBtn').addEventListener('click', startGame);
+    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
+    document.getElementById('selectOutsideBtn').addEventListener('click', selectOutsidePlayer);
+    document.getElementById('startConversationBtn').addEventListener('click', startConversation);
+});
 
 function startGame() {
     document.getElementById('startGameBtn').style.display = 'none';
