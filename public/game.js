@@ -140,13 +140,14 @@ socket.on('gameStarted', (data) => {
     document.getElementById("game").classList.remove("hidden");
     
     const roleDisplay = document.getElementById("roleDisplay");
-    const { gameInfo } = data;
-    const gameInfoText = gameInfo.numOutsiders === 1 
-        ? "There is 1 outsider"
-        : `There are ${gameInfo.numOutsiders} outsiders`;
     
     if (data.isSupervisor) {
         // Supervisor view - show all players and their roles
+        const { gameInfo } = data;
+        const gameInfoText = gameInfo.numOutsiders === 1 
+            ? "There is 1 outsider"
+            : `There are ${gameInfo.numOutsiders} outsiders`;
+            
         const playersList = data.players.map(player => 
             `<li>${player.name}${player.isOutsider ? ' (برا السالفة)' : ''}</li>`
         ).join('');
@@ -163,7 +164,7 @@ socket.on('gameStarted', (data) => {
             <p class="instructions">Monitor the discussion and guide the game!</p>
         `;
     } else {
-        // Regular player view
+        // Regular player view - no info about number of outsiders
         const roleText = data.isOutsider 
             ? '<span class="outsider-role">You are برا السالفة!</span>'
             : `<span class="insider-role">You know the topic: ${data.topic}</span>`;
@@ -171,11 +172,10 @@ socket.on('gameStarted', (data) => {
         roleDisplay.innerHTML = `
             <h2>Your Role:</h2>
             <p>Category: ${data.category}</p>
-            <p class="game-info">${gameInfoText} in this game!</p>
             <p>${roleText}</p>
             <p class="instructions">${data.isOutsider 
-                ? 'Try to blend in without knowing the topic! There might be other outsiders too...' 
-                : `Try to find who is برا السالفة! Remember, there could be ${gameInfo.numOutsiders > 1 ? 'multiple outsiders' : 'one outsider'}!`}</p>
+                ? 'Try to blend in without knowing the topic! There might be other outsiders...' 
+                : 'Try to find who is برا السالفة! Watch out - there could be multiple outsiders!'}</p>
         `;
     }
 });

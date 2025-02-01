@@ -129,7 +129,7 @@ io.on('connection', (socket) => {
         // Send roles to players
         room.players.forEach(player => {
             if (player.isSupervisor) {
-                // Send supervisor all player roles
+                // Send supervisor all player roles and game info
                 io.to(player.id).emit('gameStarted', {
                     category,
                     topic,
@@ -137,25 +137,16 @@ io.on('connection', (socket) => {
                     gameInfo: {
                         totalPlayers: nonSupervisorPlayers.length,
                         numOutsiders: room.outsiders.length
-                    },
-                    players: room.players.map(p => ({
-                        id: p.id,
-                        name: p.name,
-                        isOutsider: room.outsiders.includes(p.id)
-                    }))
+                    }
                 });
             } else {
-                // Send regular players their own role
+                // Send regular players only their own role
                 const isOutsider = room.outsiders.includes(player.id);
                 io.to(player.id).emit('gameStarted', {
                     category,
                     isOutsider,
                     topic: isOutsider ? null : topic,
-                    isSupervisor: false,
-                    gameInfo: {
-                        totalPlayers: nonSupervisorPlayers.length,
-                        numOutsiders: room.outsiders.length
-                    }
+                    isSupervisor: false
                 });
             }
         });
