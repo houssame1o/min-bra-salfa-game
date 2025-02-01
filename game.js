@@ -1,197 +1,155 @@
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCTi7KH1TN-mc0mxY2IwQPq0R1bklEfMHU",
-    authDomain: "minbrasalfa.firebaseapp.com",
-    projectId: "minbrasalfa",
-    storageBucket: "minbrasalfa.appspot.com",
-    messagingSenderId: "303059221332",
-    appId: "1:303059221332:web:4b734d5481841cbd6ee6c1",
-    measurementId: "G-7R3JQD50RT"
-};
+// Connect to Socket.IO server
+const serverUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000'
+    : window.location.origin;
+const socket = io(serverUrl);
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let currentRoom = null;
-let players = [];
-let roles = {};
-let supervisor = null;
-
-document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById('joinGameBtn').addEventListener('click', joinGame);
+// Debug connection
+socket.on('connect', () => {
+    console.log('Connected to server');
 });
 
-// Generate random room code
-function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    alert('Failed to connect to server. Please make sure the server is running.');
+});
 
-// Create a new room and show the lobby
+let currentRoom = null;
+let playerId = null;
+let playerName = null;
+
+document.addEventListener("DOMContentLoaded", function () {
+    console.log('DOM loaded');
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const joinGameBtn = document.getElementById('joinGameBtn');
+    
+    if (createRoomBtn) {
+        createRoomBtn.addEventListener('click', createRoom);
+        console.log('Create room button listener added');
+    } else {
+        console.error('Create room button not found');
+    }
+    
+    if (joinGameBtn) {
+        joinGameBtn.addEventListener('click', joinGame);
+        console.log('Join game button listener added');
+    } else {
+        console.error('Join game button not found');
+    }
+});
+
+// Create a new room
 function createRoom() {
-    const roomCode = generateRoomCode();
-    currentRoom = roomCode;
-
-    db.collection("rooms").doc(roomCode).set({
-        players: [],
-        supervisor: null
-    }).then(() => {
-        document.getElementById("roomSelection").classList.add("hidden");
-        document.getElementById("lobby").classList.remove("hidden");
-        document.getElementById("roomCodeDisplay").innerText = roomCode;
-
-        // 👇 Room creator now listens for real-time updates
-        db.collection("rooms").doc(roomCode).onSnapshot((doc) => {
-            if (doc.exists) {
-                updatePlayerList(doc.data().players, doc.data().supervisor);
-            }
-        });
-    });
-}
-
-
-// Join an existing room and show the lobby
-function joinRoom() {
-    const roomCode = document.getElementById("roomCodeInput").value.trim().toUpperCase();
-    if (!roomCode) {
-        alert("يرجى إدخال رمز الغرفة!");
+    console.log('Create room clicked');
+    playerName = document.getElementById('playerName').value.trim();
+    if (!playerName) {
+        alert('Please enter your name');
         return;
     }
 
+    console.log('Emitting createRoom event with name:', playerName);
+    socket.emit('createRoom', playerName);
+}
+
+// Socket event handlers for room creation
+socket.on('roomCreated', ({ roomCode, playerId: pid }) => {
+    console.log('Room created:', roomCode);
     currentRoom = roomCode;
+    playerId = pid;
+    
     document.getElementById("roomSelection").classList.add("hidden");
     document.getElementById("lobby").classList.remove("hidden");
     document.getElementById("roomCodeDisplay").innerText = roomCode;
+});
 
-    // Listen for updates in real-time
-    db.collection("rooms").doc(roomCode).onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            updatePlayerList(data.players, data.supervisor);
-
-            // ✅ NEW: If gameStarted is true, show game area to all players
-            if (data.gameStarted) {
-                document.getElementById("lobby").classList.add("hidden");
-                document.getElementById("gameArea").classList.remove("hidden");
-                document.getElementById("displayCategory").innerText = data.category;
-            }
-        }
-    });
-}
-
-
-
-
-// Join the game and update Firestore
+// Join an existing room
 function joinGame() {
-    const playerName = document.getElementById('playerName').value.trim();
-    if (!playerName) {
-        alert("يرجى إدخال اسمك!");
+    console.log('Join game clicked');
+    const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
+    playerName = document.getElementById('playerName').value.trim();
+    
+    if (!roomCode || !playerName) {
+        alert('Please enter both room code and your name');
         return;
     }
 
-    // Save player name in localStorage
-    localStorage.setItem("playerName", playerName);
-
-    db.collection("rooms").doc(currentRoom).get().then((doc) => {
-        if (!doc.exists) {
-            alert("الغرفة غير موجودة!");
-            return;
-        }
-
-        let roomData = doc.data();
-        let players = roomData.players || [];
-
-        if (players.includes(playerName)) {
-            alert("هذا الاسم مستخدم بالفعل. اختر اسماً آخر.");
-            return;
-        }
-
-        players.push(playerName);
-        let supervisor = roomData.supervisor || playerName;
-
-        db.collection("rooms").doc(currentRoom).update({
-            players: players,
-            supervisor: supervisor
-        }).then(() => {
-            document.getElementById("nameInput").classList.add("hidden");
-        });
-    });
+    console.log('Emitting joinRoom event with name:', playerName, 'and room:', roomCode);
+    socket.emit('joinRoom', { roomCode, playerName });
 }
 
+// Socket event handlers for joining room
+socket.on('joinedRoom', ({ roomCode, playerId: pid }) => {
+    console.log('Joined room:', roomCode);
+    currentRoom = roomCode;
+    playerId = pid;
+    
+    document.getElementById("roomSelection").classList.add("hidden");
+    document.getElementById("lobby").classList.remove("hidden");
+    document.getElementById("roomCodeDisplay").innerText = roomCode;
+});
 
-
-// Update player list with real-time updates
-function updatePlayerList(players, supervisor) {
-    const playerList = document.getElementById('playerList');
-    const playerCount = document.getElementById('playerCount');
-    playerList.innerHTML = ""; // Clear previous entries
-    playerCount.innerText = players.length; // Update player count
-
-    players.forEach((player) => {
-        let row = document.createElement('tr');
-        row.innerHTML = player === supervisor
-            ? `<td>${player} <span class="badge">👑 المراقب</span></td>`
-            : `<td>${player}</td>`;
-        playerList.appendChild(row);
+// Update player list when players join/leave
+socket.on('updatePlayers', (players) => {
+    console.log('Updating players:', players);
+    const playerList = document.getElementById("playerList");
+    playerList.innerHTML = "";
+    
+    players.forEach(player => {
+        const playerElement = document.createElement("div");
+        playerElement.className = "player-item";
+        playerElement.textContent = `${player.name} ${player.isSupervisor ? '(المراقب)' : ''}`;
+        playerList.appendChild(playerElement);
     });
 
-    // Ensure `currentPlayer` is defined
-    const currentPlayer = localStorage.getItem("playerName");
-
-    // Show "Start Game" button if player is the creator & at least 5 players are in the room
-    if (players.length >= 5 && supervisor === currentPlayer) {
-        document.getElementById("startGameBtn").classList.remove("hidden");
+    // Show start game button only for supervisor
+    const isSupervisor = players.find(p => p.id === playerId)?.isSupervisor;
+    const startGameBtn = document.getElementById("startGameBtn");
+    if (isSupervisor && players.length >= 5) {
+        startGameBtn.classList.remove("hidden");
+        startGameBtn.onclick = showCategoryInput;
+        console.log('Showing start game button for supervisor');
     } else {
-        document.getElementById("startGameBtn").classList.add("hidden");
+        startGameBtn.classList.add("hidden");
     }
-}
-
+});
 
 function showCategoryInput() {
-    document.getElementById("categoryInput").classList.remove("hidden");
+    console.log('Showing category input');
+    document.getElementById("gameSetup").classList.remove("hidden");
 }
 
 function submitGameSetup() {
-    const category = document.getElementById('gameCategory').value.trim();
-    const secret = document.getElementById('gameSecret').value.trim();
+    console.log('Submitting game setup');
+    const category = document.getElementById("categoryInput").value.trim();
+    const topic = document.getElementById("topicInput").value.trim();
     
-    if (!category || !secret) {
-        alert("يرجى إدخال الفئة والسالفة!");
+    if (!category || !topic) {
+        alert("Please enter both category and topic");
         return;
     }
 
-    // Assign roles (1 player "برا السالفة", rest "جوا السالفة")
-    let shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-    let roles = {};
-    roles[shuffledPlayers[0]] = "برا السالفة";
-    shuffledPlayers.slice(1).forEach(p => roles[p] = "جوا السالفة");
-
-    // Store game start state in Firestore
-    db.collection("rooms").doc(currentRoom).update({
-        category: category,
-        roles: roles,
-        gameStarted: true // ✅ NEW: Marks game as started
-    }).then(() => {
-        document.getElementById("categoryInput").classList.add("hidden");
-        document.getElementById("gameArea").classList.remove("hidden");
-        document.getElementById("displayCategory").innerText = category;
-        console.log("✅ Game started!");
-    });
+    console.log('Emitting startGame event with category:', category, 'and topic:', topic);
+    socket.emit('startGame', { roomCode: currentRoom, category, topic });
 }
 
+// Handle game start
+socket.on('gameStarted', ({ category, isOutsider, topic }) => {
+    console.log('Game started. Category:', category, 'Is outsider:', isOutsider);
+    document.getElementById("lobby").classList.add("hidden");
+    document.getElementById("gameSetup").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+    
+    const roleDisplay = document.getElementById("roleDisplay");
+    roleDisplay.innerHTML = `
+        <h2>Your Role:</h2>
+        <p>Category: ${category}</p>
+        <p>${isOutsider ? 'You are برا السالفة!' : `Topic: ${topic}`}</p>
+        <p class="instructions">${isOutsider ? 'Try to blend in without knowing the topic!' : 'Try to find who is برا السالفة!'}</p>
+    `;
+});
 
-function revealRole() {
-    db.collection("rooms").doc(currentRoom).get().then((doc) => {
-        if (doc.exists) {
-            let data = doc.data();
-            let roles = data.roles;
-            let currentPlayer = localStorage.getItem("playerName");
-
-            if (roles[currentPlayer]) {
-                document.getElementById("playerRole").innerText = `دورك: ${roles[currentPlayer]}`;
-            }
-        }
-    });
-}
-
+// Handle errors
+socket.on('error', (message) => {
+    console.error('Server error:', message);
+    alert(message);
+});
