@@ -10,7 +10,11 @@ const io = require('socket.io')(http, {
 const path = require('path');
 const { nanoid } = require('nanoid');
 
+<<<<<<< HEAD
 app.use(express.static(path.join(__dirname)));
+=======
+app.use(express.static(path.join(__dirname, 'public')));
+>>>>>>> 5a50760 (Initial commit)
 
 // Store game rooms and their states
 const rooms = new Map();

@@ -23,6 +23,11 @@ npm install
 npm run dev
 ```
 
+<<<<<<< HEAD
+=======
+Visit `http://localhost:3000` in your browser.
+
+>>>>>>> 5a50760 (Initial commit)
 ## Deployment
 
 This game can be deployed to Render.com:

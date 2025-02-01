@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>برا السالفة - لعبة اجتماعية</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+        .hidden {
+            display: none;
+        }
+        .player-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #roleDisplay {
+            text-align: center;
+            padding: 20px;
+            background-color: #e8f0fe;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>برا السالفة</h1>
+        
+        <!-- Room Selection Screen -->
+        <div id="roomSelection">
+            <div class="input-group">
+                <input type="text" id="playerName" placeholder="اكتب اسمك">
+            </div>
+            <div class="input-group">
+                <button id="createRoomBtn">إنشاء غرفة جديدة</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="roomCode" placeholder="ادخل رمز الغرفة">
+                <button id="joinGameBtn">انضم للغرفة</button>
+            </div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby" class="hidden">
+            <h2>رمز الغرفة: <span id="roomCodeDisplay"></span></h2>
+            <div id="playerList"></div>
+            <button id="startGameBtn" class="hidden">ابدأ اللعبة</button>
+        </div>
+
+        <!-- Game Setup Screen -->
+        <div id="gameSetup" class="hidden">
+            <h2>إعداد اللعبة</h2>
+            <div class="input-group">
+                <input type="text" id="categoryInput" placeholder="اختر الفئة (مثال: رياضة، أفلام)">
+            </div>
+            <div class="input-group">
+                <input type="text" id="topicInput" placeholder="اختر السالفة (مثال: كرة القدم)">
+            </div>
+            <button onclick="submitGameSetup()">ابدأ</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game" class="hidden">
+            <div id="roleDisplay"></div>
+            <div class="instructions">
+                <p>انتقل إلى Discord للمناقشة مع اللاعبين!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
