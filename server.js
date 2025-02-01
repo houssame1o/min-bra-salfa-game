@@ -137,7 +137,12 @@ io.on('connection', (socket) => {
                     gameInfo: {
                         totalPlayers: nonSupervisorPlayers.length,
                         numOutsiders: room.outsiders.length
-                    }
+                    },
+                    players: room.players.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        isOutsider: room.outsiders.includes(p.id)
+                    }))
                 });
             } else {
                 // Send regular players only their own role

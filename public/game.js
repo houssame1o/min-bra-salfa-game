@@ -148,8 +148,16 @@ socket.on('gameStarted', (data) => {
             ? "There is 1 outsider"
             : `There are ${gameInfo.numOutsiders} outsiders`;
             
-        const playersList = data.players.map(player => 
-            `<li>${player.name}${player.isOutsider ? ' (برا السالفة)' : ''}</li>`
+        // Separate players into outsiders and insiders for clearer display
+        const outsiders = data.players.filter(p => p.isOutsider);
+        const insiders = data.players.filter(p => !p.isOutsider && !p.isSupervisor);
+        
+        const outsidersList = outsiders.map(player => 
+            `<li class="outsider-player">${player.name} (برا السالفة)</li>`
+        ).join('');
+        
+        const insidersList = insiders.map(player => 
+            `<li class="insider-player">${player.name}</li>`
         ).join('');
         
         roleDisplay.innerHTML = `
@@ -158,10 +166,16 @@ socket.on('gameStarted', (data) => {
             <p>Topic: ${data.topic}</p>
             <p class="game-info">${gameInfoText} among ${gameInfo.totalPlayers} players!</p>
             <div class="players-list">
-                <h3>Players and Roles:</h3>
-                <ul>${playersList}</ul>
+                <div class="outsiders-section">
+                    <h3>Outsiders (برا السالفة):</h3>
+                    <ul class="outsiders-list">${outsidersList}</ul>
+                </div>
+                <div class="insiders-section">
+                    <h3>Players who know the topic:</h3>
+                    <ul class="insiders-list">${insidersList}</ul>
+                </div>
             </div>
-            <p class="instructions">Monitor the discussion and guide the game!</p>
+            <p class="instructions">Monitor the discussion and guide the game! Only you can see who is برا السالفة.</p>
         `;
     } else {
         // Regular player view - no info about number of outsiders
