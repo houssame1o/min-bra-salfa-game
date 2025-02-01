@@ -133,19 +133,39 @@ function submitGameSetup() {
 }
 
 // Handle game start
-socket.on('gameStarted', ({ category, isOutsider, topic }) => {
-    console.log('Game started. Category:', category, 'Is outsider:', isOutsider);
+socket.on('gameStarted', (data) => {
+    console.log('Game started:', data);
     document.getElementById("lobby").classList.add("hidden");
     document.getElementById("gameSetup").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
     
     const roleDisplay = document.getElementById("roleDisplay");
-    roleDisplay.innerHTML = `
-        <h2>Your Role:</h2>
-        <p>Category: ${category}</p>
-        <p>${isOutsider ? 'You are برا السالفة!' : `Topic: ${topic}`}</p>
-        <p class="instructions">${isOutsider ? 'Try to blend in without knowing the topic!' : 'Try to find who is برا السالفة!'}</p>
-    `;
+    
+    if (data.isSupervisor) {
+        // Supervisor view - show all players and their roles
+        const playersList = data.players.map(player => 
+            `<li>${player.name}${player.isOutsider ? ' (برا السالفة)' : ''}</li>`
+        ).join('');
+        
+        roleDisplay.innerHTML = `
+            <h2>Supervisor View (المراقب)</h2>
+            <p>Category: ${data.category}</p>
+            <p>Topic: ${data.topic}</p>
+            <div class="players-list">
+                <h3>Players and Roles:</h3>
+                <ul>${playersList}</ul>
+            </div>
+            <p class="instructions">Monitor the discussion and guide the game!</p>
+        `;
+    } else {
+        // Regular player view
+        roleDisplay.innerHTML = `
+            <h2>Your Role:</h2>
+            <p>Category: ${data.category}</p>
+            <p>${data.isOutsider ? 'You are برا السالفة!' : `Topic: ${data.topic}`}</p>
+            <p class="instructions">${data.isOutsider ? 'Try to blend in without knowing the topic!' : 'Try to find who is برا السالفة!'}</p>
+        `;
+    }
 });
 
 // Handle errors

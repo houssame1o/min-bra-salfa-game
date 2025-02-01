@@ -65,6 +65,7 @@ io.on('connection', (socket) => {
 
     // Start game
     socket.on('startGame', ({ roomCode, category, topic }) => {
+        console.log('Starting game in room:', roomCode);
         const room = rooms.get(roomCode);
         if (!room || room.supervisor !== socket.id) return;
 
@@ -72,19 +73,38 @@ io.on('connection', (socket) => {
         room.category = category;
         room.topic = topic;
 
-        // Randomly select outsider
-        const players = room.players;
-        const outsiderIndex = Math.floor(Math.random() * players.length);
-        room.outsider = players[outsiderIndex].id;
+        // Get non-supervisor players
+        const nonSupervisorPlayers = room.players.filter(p => !p.isSupervisor);
+
+        // Randomly select outsider from non-supervisor players
+        const outsiderIndex = Math.floor(Math.random() * nonSupervisorPlayers.length);
+        room.outsider = nonSupervisorPlayers[outsiderIndex].id;
 
         // Send roles to players
-        players.forEach(player => {
-            io.to(player.id).emit('gameStarted', {
-                category,
-                isOutsider: player.id === room.outsider,
-                topic: player.id === room.outsider ? null : topic
-            });
+        room.players.forEach(player => {
+            if (player.isSupervisor) {
+                // Send supervisor all player roles
+                io.to(player.id).emit('gameStarted', {
+                    category,
+                    topic,
+                    isSupervisor: true,
+                    players: room.players.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        isOutsider: p.id === room.outsider
+                    }))
+                });
+            } else {
+                // Send regular players their own role
+                io.to(player.id).emit('gameStarted', {
+                    category,
+                    isOutsider: player.id === room.outsider,
+                    topic: player.id === room.outsider ? null : topic,
+                    isSupervisor: false
+                });
+            }
         });
+        console.log('Game started in room:', roomCode);
     });
 
     // Handle disconnection
