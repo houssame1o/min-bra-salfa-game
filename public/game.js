@@ -140,6 +140,10 @@ socket.on('gameStarted', (data) => {
     document.getElementById("game").classList.remove("hidden");
     
     const roleDisplay = document.getElementById("roleDisplay");
+    const { gameInfo } = data;
+    const gameInfoText = gameInfo.numOutsiders === 1 
+        ? "There is 1 outsider"
+        : `There are ${gameInfo.numOutsiders} outsiders`;
     
     if (data.isSupervisor) {
         // Supervisor view - show all players and their roles
@@ -151,6 +155,7 @@ socket.on('gameStarted', (data) => {
             <h2>Supervisor View (المراقب)</h2>
             <p>Category: ${data.category}</p>
             <p>Topic: ${data.topic}</p>
+            <p class="game-info">${gameInfoText} among ${gameInfo.totalPlayers} players!</p>
             <div class="players-list">
                 <h3>Players and Roles:</h3>
                 <ul>${playersList}</ul>
@@ -159,11 +164,18 @@ socket.on('gameStarted', (data) => {
         `;
     } else {
         // Regular player view
+        const roleText = data.isOutsider 
+            ? '<span class="outsider-role">You are برا السالفة!</span>'
+            : `<span class="insider-role">You know the topic: ${data.topic}</span>`;
+
         roleDisplay.innerHTML = `
             <h2>Your Role:</h2>
             <p>Category: ${data.category}</p>
-            <p>${data.isOutsider ? 'You are برا السالفة!' : `Topic: ${data.topic}`}</p>
-            <p class="instructions">${data.isOutsider ? 'Try to blend in without knowing the topic!' : 'Try to find who is برا السالفة!'}</p>
+            <p class="game-info">${gameInfoText} in this game!</p>
+            <p>${roleText}</p>
+            <p class="instructions">${data.isOutsider 
+                ? 'Try to blend in without knowing the topic! There might be other outsiders too...' 
+                : `Try to find who is برا السالفة! Remember, there could be ${gameInfo.numOutsiders > 1 ? 'multiple outsiders' : 'one outsider'}!`}</p>
         `;
     }
 });

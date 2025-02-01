@@ -10,6 +10,52 @@ const io = require('socket.io')(http, {
 const path = require('path');
 const { nanoid } = require('nanoid');
 
+function getRandomOutsiders(players, gameType = null) {
+    const totalPlayers = players.length;
+    
+    // Different game types with their probabilities
+    const gameTypes = {
+        SINGLE: { weight: 50, min: 1, max: 1 },                    // 50% chance - Classic mode with 1 outsider
+        MULTIPLE: { weight: 30, min: 2, max: Math.floor(totalPlayers * 0.4) }, // 30% chance - Multiple outsiders (up to 40% of players)
+        MAJORITY: { weight: 15, min: Math.ceil(totalPlayers * 0.5), max: totalPlayers - 1 }, // 15% chance - Majority are outsiders
+        ALL: { weight: 5, min: totalPlayers, max: totalPlayers }   // 5% chance - Everyone is an outsider!
+    };
+
+    // If gameType not specified, randomly select based on weights
+    if (!gameType) {
+        const totalWeight = Object.values(gameTypes).reduce((sum, type) => sum + type.weight, 0);
+        let random = Math.random() * totalWeight;
+        
+        for (const [type, data] of Object.entries(gameTypes)) {
+            random -= data.weight;
+            if (random <= 0) {
+                gameType = type;
+                break;
+            }
+        }
+    }
+
+    const selectedType = gameTypes[gameType];
+    
+    // Determine number of outsiders for this game
+    const numOutsiders = Math.floor(
+        Math.random() * (selectedType.max - selectedType.min + 1) + selectedType.min
+    );
+
+    // Create array of indices and shuffle it
+    const indices = Array.from({ length: totalPlayers }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+
+    // Select outsider indices
+    const outsiderIndices = indices.slice(0, numOutsiders);
+    
+    console.log(`Game Type: ${gameType}, Players: ${totalPlayers}, Outsiders: ${numOutsiders}`);
+    return outsiderIndices;
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Store game rooms and their states
@@ -31,7 +77,7 @@ io.on('connection', (socket) => {
             gameStarted: false,
             category: '',
             topic: '',
-            outsider: null
+            outsiders: null
         });
 
         socket.join(roomCode);
@@ -76,9 +122,9 @@ io.on('connection', (socket) => {
         // Get non-supervisor players
         const nonSupervisorPlayers = room.players.filter(p => !p.isSupervisor);
 
-        // Randomly select outsider from non-supervisor players
-        const outsiderIndex = Math.floor(Math.random() * nonSupervisorPlayers.length);
-        room.outsider = nonSupervisorPlayers[outsiderIndex].id;
+        // Get random outsider indices using our new function
+        const outsiderIndices = getRandomOutsiders(nonSupervisorPlayers);
+        room.outsiders = outsiderIndices.map(index => nonSupervisorPlayers[index].id);
 
         // Send roles to players
         room.players.forEach(player => {
@@ -88,23 +134,32 @@ io.on('connection', (socket) => {
                     category,
                     topic,
                     isSupervisor: true,
+                    gameInfo: {
+                        totalPlayers: nonSupervisorPlayers.length,
+                        numOutsiders: room.outsiders.length
+                    },
                     players: room.players.map(p => ({
                         id: p.id,
                         name: p.name,
-                        isOutsider: p.id === room.outsider
+                        isOutsider: room.outsiders.includes(p.id)
                     }))
                 });
             } else {
                 // Send regular players their own role
+                const isOutsider = room.outsiders.includes(player.id);
                 io.to(player.id).emit('gameStarted', {
                     category,
-                    isOutsider: player.id === room.outsider,
-                    topic: player.id === room.outsider ? null : topic,
-                    isSupervisor: false
+                    isOutsider,
+                    topic: isOutsider ? null : topic,
+                    isSupervisor: false,
+                    gameInfo: {
+                        totalPlayers: nonSupervisorPlayers.length,
+                        numOutsiders: room.outsiders.length
+                    }
                 });
             }
         });
-        console.log('Game started in room:', roomCode);
+        console.log('Game started in room:', roomCode, 'with', room.outsiders.length, 'outsiders');
     });
 
     // Handle disconnection
